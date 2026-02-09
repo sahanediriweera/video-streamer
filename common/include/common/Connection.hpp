@@ -9,12 +9,12 @@
 #include <unistd.h>
 #include <vector>
 
-inline int set_nonblocking(const int fd);
+inline int set_nonblocking(int);
 
 template<typename T>
 class Connection {
     static_assert(
-        std::is_same_v<T,std::pmr::vector<char>> || std::is_same_v<T,std::string>,
+        std::is_same_v<T,std::vector<char>> || std::is_same_v<T,std::string>,
         "Connection supports only std::pmr::vector<char> and std::string"
     );
 

@@ -4,4 +4,8 @@ add_library(
         src/Connection.cpp
 )
 
+add_subdirectory(common)
+
+target_link_libraries(server PRIVATE common)
+
 target_include_directories(common_lib PUBLIC include)
