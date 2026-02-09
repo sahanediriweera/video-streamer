@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/fcntl.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include "common/Connection.hpp"
 #include "server/Server.hpp"
 

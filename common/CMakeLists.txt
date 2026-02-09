@@ -1,11 +1,12 @@
 add_library(
   common_lib STATIC
-  src/Socket.cpp src/Poller.cpp
-        src/Connection.cpp
+  src/Config.cpp
+  src/Connection.cpp
+  src/Error.cpp
+  src/Logger.cpp
+  src/Packet.cpp
+  src/Poller.cpp
+  src/Socket.cpp
 )
-
-add_subdirectory(common)
-
-target_link_libraries(server PRIVATE common)
 
 target_include_directories(common_lib PUBLIC include)

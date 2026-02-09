@@ -1,3 +1,6 @@
-//
-// Created by Sahan Ediriweera on 2026-02-03.
-//
+#include <iostream>
+
+int main() {
+    std::cout << "TestCommon running.\n";
+    return 0;
+}
