@@ -10,6 +10,7 @@ add_executable(
         server_exec
         src/main.cpp
         src/ClientSession.cpp
+        src/ClientRegistry.cpp
 )
 
 target_link_libraries(server_exec PRIVATE server_lib common_lib)

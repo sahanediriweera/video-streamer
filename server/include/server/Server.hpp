@@ -9,22 +9,30 @@
 #include <poll.h>
 #include <vector>
 
+#include "ClientRegistry.hpp"
+
 template<typename T>
 class Connection; //Should I use the import or declaration here? check in book
 
 class Server {
 private:
-    int server_fd;
+    int server_fd{};
     std::vector<pollfd> poll_fds;
-    std::unordered_map<int,std::shared_ptr<Connection<std::vector<char>>>> clients;
+    ClientRegistry client_registry;
 
     void accept_client();
     void handle_client_data(int fd,size_t pollIndex); //having a poll index is not suitable connect all together if possible
-    void broadcast(int sender_fd,const std::vector<char>& data);
+    void setup_server_socket(uint16_t port);
 
 public:
     explicit Server(uint16_t port);
+    ~Server();
+
+    Server(const Server&) = delete;
+    Server& operator=(const Server&) = delete;
     void run();
+
+    const ClientRegistry& get_registry() const {return client_registry;}
 
 };
 
