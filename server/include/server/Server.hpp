@@ -19,8 +19,8 @@ private:
     std::unordered_map<int,std::shared_ptr<Connection<std::vector<char>>>> clients;
 
     void accept_client();
-    void handle_client_data(const int fd,size_t pollIndex); //having a poll index is not suitable connect all together if possible
-    void broadcast(const int sender_fd,const std::vector<char>& data);
+    void handle_client_data(int fd,size_t pollIndex); //having a poll index is not suitable connect all together if possible
+    void broadcast(int sender_fd,const std::vector<char>& data);
 
 public:
     explicit Server(uint16_t port);
@@ -28,6 +28,6 @@ public:
 
 };
 
-void set_non_blocking(const int fd);
+void set_non_blocking(int fd);
 
 #endif //VIDEO_STREAMER_SERVER_HPP

@@ -9,6 +9,7 @@ target_link_libraries(server_lib PRIVATE common_lib protocol_lib)
 add_executable(
         server_exec
         src/main.cpp
+        src/ClientSession.cpp
 )
 
-target_link_libraries(server_exec PRIVATE server_lib)
+target_link_libraries(server_exec PRIVATE server_lib common_lib)
