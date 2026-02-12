@@ -8,7 +8,7 @@
 #include "common/Connection.hpp"
 
 
-static void set_non_blocking(int fd) {
+void set_non_blocking(int fd) {
     int flags = fcntl(fd,F_GETFL,0);
 
     if (flags == -1) {

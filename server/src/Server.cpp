@@ -9,18 +9,7 @@
 #include <sys/fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "common/Connection.hpp"
 #include "server/Server.hpp"
-
-void set_non_blocking(const int fd) {
-    const int flags = fcntl(fd,F_GETFL,0);
-    if (flags == -1) {
-        throw std::runtime_error("fcntl F_GETFL failed"); //Todo add an exit clause
-    }
-    if (fcntl(fd,F_SETFL,flags | O_NONBLOCK) == -1) {
-        throw std::runtime_error("fcntl F_SETFL failed");
-    }
-}
 
 void Server::setup_server_socket(uint16_t port) {
     server_fd = socket(AF_INET,SOCK_STREAM,0);
@@ -28,7 +17,12 @@ void Server::setup_server_socket(uint16_t port) {
         throw std::runtime_error("Could not create server socket");// add exit clause
     }
 
-    set_non_blocking(server_fd);
+    try {
+        set_non_blocking(server_fd);
+    } catch (const std::exception& e) {
+        close(server_fd);
+        throw;
+    }
 
     constexpr int opt = 1; // is this performant benefiting check again
     if (setsockopt(server_fd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt)) < 0) {
@@ -83,33 +77,21 @@ void Server::accept_client() {
         }
     }
 
+    // The entire client setup should be in a try-catch block
     try {
         set_non_blocking(client_fd);
-    }catch (const std::exception& e) {
-        std::cerr << "Failed to set non-blocking: " << e.what() << "\n";
-        close(client_fd);
-        return;
-    }
-
-    try {
         if (auto session = std::make_unique<ClientSession>(client_fd); !client_registry.add_client(client_fd,std::move(session))) {
             std::cerr<< "Failed to register client " << client_fd << "\n";
             close(client_fd);
             return;
         }
 
-        poll_fds.push_back({client_fd,POLLIN,0});
+        poll_fds.push_back({.fd = client_fd, .events = POLLIN, .revents = 0});
         std::cout << "New Clinet connected " << client_fd << "\n";
     }catch (const std::exception& e) {
-        std::cerr << "Sessopm creation failed: " << e.what() << "\n";
-        auto it = std::ranges::find_if(poll_fds.begin(),poll_fds.end(),[client_fd](const pollfd& p) {
-            return p.fd == client_fd;
-        });
-
-        if (it != poll_fds.end()) {
-            poll_fds.erase(it);
-            close(client_fd);
-        }
+        std::cerr << "Session creation or setup failed for fd " << client_fd << ": " << e.what() << "\n";
+        // The client was never added to poll_fds or registry, so just close the socket.
+        close(client_fd);
     }
 }
 
@@ -117,6 +99,7 @@ void Server::handle_client_data(const int fd, const size_t pollIndex) {
     ClientSession* session = client_registry.get_client(fd);
     if (!session) {
         close(fd);
+        // This indicates a logic error, where poll_fds and client_registry are out of sync.
         poll_fds.erase(poll_fds.begin() + pollIndex);
         return;
     }
@@ -143,7 +126,8 @@ void Server::run() {
             break;
         }
 
-        for (size_t i = 0; i < poll_fds.size(); ++i) { //TODO refactor this
+        // Iterate backwards to safely remove elements
+        for (size_t i = poll_fds.size(); i-- > 0;) {
             if (poll_fds[i].revents & POLLIN) {
                 if (poll_fds[i].fd == server_fd) {
                     accept_client();
